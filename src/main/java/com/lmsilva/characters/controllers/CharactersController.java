@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 
 @RestController
-@RequestMapping("/v1/public/characters")
 public class CharactersController {
     public static final String FORMATS = "(comic|magazine|trade paperback|hardcover|digest|graphic novel|digital comic|infinite comic)";
     public static final String INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER = "Invalid or unrecognized ordering parameter";
@@ -52,7 +51,7 @@ public class CharactersController {
         }
     }
 
-    @RequestMapping("/")
+    @RequestMapping("/v1/public/characters")
     public List<Character> get(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String nameStartsWith,
@@ -71,12 +70,12 @@ public class CharactersController {
                 series, events, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}")
+    @RequestMapping("/v1/public/characters/{characterId}")
     public Character getCharacterIndividual(@PathVariable Integer characterId) {
         return characterService.characterById(characterId);
     }
 
-    @RequestMapping("/{characterId}/comics")
+    @RequestMapping("/v1/public/characters/{characterId}/comics")
     public List<Comic> getCharacterComics(@PathVariable Integer characterId,
                                           @RequestParam(required = false) String format,
                                           @RequestParam(required = false) String formatType,
@@ -116,7 +115,7 @@ public class CharactersController {
                 collaborators, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/events")
+    @RequestMapping("/v1/public/characters/{characterId}/events")
     public List<Event> getCharacterEvents(@PathVariable Integer characterId, @RequestParam(required = false) String name,
                                           @RequestParam(required = false) String nameStartsWith,
                                           @RequestParam(required = false) String modifiedSince,
@@ -134,7 +133,7 @@ public class CharactersController {
                 comics, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/series")
+    @RequestMapping("/v1/public/characters/{characterId}/series")
     public List<Series> getCharacterSeries(@PathVariable Integer characterId,
                                            @RequestParam(required = false) String title,
                                            @RequestParam(required = false) String titleStartsWith,
@@ -157,7 +156,7 @@ public class CharactersController {
                 comics, stories, events, creators, seriesType, contains, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/stories")
+    @RequestMapping("/v1/public/characters/{characterId}/stories")
     public List<Story> getCharacterStories(@PathVariable Integer characterId,
                                            @RequestParam(required = false) String modifiedSince,
                                            @RequestParam(required = false) List<Integer> comics,
