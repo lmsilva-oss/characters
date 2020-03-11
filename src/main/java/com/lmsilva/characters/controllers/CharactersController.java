@@ -1,49 +1,125 @@
 package com.lmsilva.characters.controllers;
 
-import com.lmsilva.characters.swagger.ApiException;
-import com.lmsilva.characters.swagger.api.PublicApi;
-import com.lmsilva.characters.swagger.model.CharacterDataContainer;
-import org.apache.commons.codec.binary.Hex;
-import org.springframework.beans.factory.annotation.Value;
+import com.lmsilva.characters.service.ICharacterService;
+import com.lmsilva.characters.swagger.model.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 
 @RestController
 @RequestMapping("/v1/public/characters")
 public class CharactersController {
-    private static final PublicApi apiClient = new PublicApi();
-    @Value("${marvel.api.publicKey}")
-    private String PUBLIC_KEY;
-    @Value("${marvel.api.privateKey}")
-    private String PRIVATE_KEY;
+    @Autowired
+    @Qualifier("MarvelApi")
+    ICharacterService characterService;
 
     @RequestMapping("/")
     // TODO: add query parameters
-    public CharacterDataContainer get() throws ApiException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-        long timestamp = System.currentTimeMillis()/1000; // ugly hack to fit into an int
-        // ugly hack to get an Integer
-        String ts = String.valueOf(timestamp);
-        Integer tsInt = Integer.parseInt(ts);
-
-        String hashBase = ts + PRIVATE_KEY + PUBLIC_KEY;
-        String hash = Hex.encodeHexString(md5.digest(hashBase.getBytes("UTF-8")));
-
-        return apiClient
-                .getCreatorCollection(PUBLIC_KEY, hash, tsInt,
-                        null, null, null, null, null,
-                        null, null, null, null, null)
-                .getData();
+    public CharacterDataWrapper get(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String nameStartsWith,
+            @RequestParam(required = false) String modifiedSince,
+            @RequestParam(required = false) List<Integer> comics,
+            @RequestParam(required = false) List<Integer> series,
+            @RequestParam(required = false) List<Integer> events,
+            @RequestParam(required = false) List<Integer> stories,
+            @RequestParam(required = false) List<String> orderBy,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset) {
+        return characterService.allCharacters(name, nameStartsWith, modifiedSince, comics,
+                series, events, stories, orderBy, limit, offset);
     }
 
-    // TODO: @RequestMapping('/v1/public/characters/{characterId}')
-    // TODO: @RequestMapping('/v1/public/characters/{characterId}/comics')
-    // TODO: @RequestMapping('/v1/public/characters/{characterId}/events')
-    // TODO: @RequestMapping('/v1/public/characters/{characterId}/series')
-    // TODO: @RequestMapping('/v1/public/characters/{characterId}/stories')
+    @RequestMapping("/{characterId}")
+    public CharacterDataWrapper getCharacterIndividual(@PathVariable Integer characterId) {
+        return characterService.characterById(characterId);
+    }
+
+    @RequestMapping("/{characterId}/comics")
+    public ComicDataWrapper getCharacterComics(@PathVariable Integer characterId,
+                                               @RequestParam(required = false) String format,
+                                               @RequestParam(required = false) String formatType,
+                                               @RequestParam(required = false) Boolean noVariants,
+                                               @RequestParam(required = false) String dateDescriptor,
+                                               @RequestParam(required = false) List<Integer> dateRange,
+                                               @RequestParam(required = false) String title,
+                                               @RequestParam(required = false) String titleStartsWith,
+                                               @RequestParam(required = false) Integer startYear,
+                                               @RequestParam(required = false) Integer issueNumber,
+                                               @RequestParam(required = false) String diamondCode,
+                                               @RequestParam(required = false) Integer digitalId,
+                                               @RequestParam(required = false) String upc,
+                                               @RequestParam(required = false) String isbn,
+                                               @RequestParam(required = false) String ean,
+                                               @RequestParam(required = false) String issn,
+                                               @RequestParam(required = false) Boolean hasDigitalIssue,
+                                               @RequestParam(required = false) String modifiedSince,
+                                               @RequestParam(required = false) List<Integer> creators,
+                                               @RequestParam(required = false) List<Integer> series,
+                                               @RequestParam(required = false) List<Integer> events,
+                                               @RequestParam(required = false) List<Integer> stories,
+                                               @RequestParam(required = false) List<Integer> sharedAppearances,
+                                               @RequestParam(required = false) List<Integer> collaborators,
+                                               @RequestParam(required = false) List<String> orderBy,
+                                               @RequestParam(required = false) Integer limit,
+                                               @RequestParam(required = false) Integer offset) {
+        return characterService.comicsByCharacterId(characterId, format, formatType, noVariants, dateDescriptor, dateRange, title, titleStartsWith,
+                startYear, issueNumber, diamondCode, digitalId, upc, isbn, ean, issn,
+                hasDigitalIssue, modifiedSince, creators, series, events, stories, sharedAppearances,
+                collaborators, orderBy, limit, offset);
+    }
+
+    @RequestMapping("/{characterId}/events")
+    public EventDataWrapper getCharacterEvents(@PathVariable Integer characterId, @RequestParam(required = false) String name,
+                                               @RequestParam(required = false) String nameStartsWith,
+                                               @RequestParam(required = false) String modifiedSince,
+                                               @RequestParam(required = false) List<Integer> creators,
+                                               @RequestParam(required = false) List<Integer> series,
+                                               @RequestParam(required = false) List<Integer> comics,
+                                               @RequestParam(required = false) List<Integer> stories,
+                                               @RequestParam(required = false) List<String> orderBy,
+                                               @RequestParam(required = false) Integer limit,
+                                               @RequestParam(required = false) Integer offset) {
+        return characterService.eventsByCharacterId(characterId, name, nameStartsWith, modifiedSince, creators, series,
+                comics, stories, orderBy, limit, offset);
+    }
+
+    @RequestMapping("/{characterId}/series")
+    public SeriesDataWrapper getCharacterSeries(@PathVariable Integer characterId,
+                                                @RequestParam(required = false) String title,
+                                                @RequestParam(required = false) String titleStartsWith,
+                                                @RequestParam(required = false) Integer startYear,
+                                                @RequestParam(required = false) String modifiedSince,
+                                                @RequestParam(required = false) List<Integer> comics,
+                                                @RequestParam(required = false) List<Integer> stories,
+                                                @RequestParam(required = false) List<Integer> events,
+                                                @RequestParam(required = false) List<Integer> creators,
+                                                @RequestParam(required = false) String seriesType,
+                                                @RequestParam(required = false) List<String> contains,
+                                                @RequestParam(required = false) List<String> orderBy,
+                                                @RequestParam(required = false) Integer limit,
+                                                @RequestParam(required = false) Integer offset) {
+        return characterService.seriesByCharacterId(characterId, title, titleStartsWith, startYear, modifiedSince,
+                comics, stories, events, creators, seriesType, contains, orderBy, limit, offset);
+    }
+
+    @RequestMapping("/{characterId}/stories")
+    public StoryDataWrapper getCharacterStories(@PathVariable Integer characterId,
+                                                @RequestParam(required = false) String modifiedSince,
+                                                @RequestParam(required = false) List<Integer> comics,
+                                                @RequestParam(required = false) List<Integer> series,
+                                                @RequestParam(required = false) List<Integer> events,
+                                                @RequestParam(required = false) List<Integer> creators,
+                                                @RequestParam(required = false) List<String> orderBy,
+                                                @RequestParam(required = false) Integer limit,
+                                                @RequestParam(required = false) Integer offset) {
+        return characterService.storiesbyCharacterId(characterId, modifiedSince, comics, series, events, creators,
+                orderBy, limit, offset);
+    }
 }
