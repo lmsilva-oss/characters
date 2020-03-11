@@ -1,118 +1,125 @@
 package com.lmsilva.characters.controllers;
 
-import com.lmsilva.characters.swagger.ApiException;
-import com.lmsilva.characters.swagger.api.PublicApi;
+import com.lmsilva.characters.service.ICharacterService;
 import com.lmsilva.characters.swagger.model.*;
-import org.apache.commons.codec.binary.Hex;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 
 @RestController
 @RequestMapping("/v1/public/characters")
 public class CharactersController {
-    private static final PublicApi apiClient = new PublicApi();
-    @Value("${marvel.api.publicKey}")
-    private String PUBLIC_KEY;
-    @Value("${marvel.api.privateKey}")
-    private String PRIVATE_KEY;
+    @Autowired
+    @Qualifier("MarvelApi")
+    ICharacterService characterService;
 
     @RequestMapping("/")
     // TODO: add query parameters
-    public CharacterDataContainer get() throws ApiException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-
-        return apiClient
-                .getCreatorCollection(auth.getPublicKey(), auth.getHash(), auth.getTimestamp(),
-                        null, null, null, null, null,
-                        null, null, null, null, null)
-                .getData();
+    public CharacterDataWrapper get(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String nameStartsWith,
+            @RequestParam(required = false) String modifiedSince,
+            @RequestParam(required = false) List<Integer> comics,
+            @RequestParam(required = false) List<Integer> series,
+            @RequestParam(required = false) List<Integer> events,
+            @RequestParam(required = false) List<Integer> stories,
+            @RequestParam(required = false) List<String> orderBy,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset) {
+        return characterService.allCharacters(name, nameStartsWith, modifiedSince, comics,
+                series, events, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/v1/public/characters/{characterId}")
-    public CharacterDataContainer getCharacterIndividual(@PathVariable Integer characterId) throws NoSuchAlgorithmException, UnsupportedEncodingException, ApiException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-
-        return apiClient
-                .getCharacterIndividual(characterId, auth.getPublicKey(), auth.getHash(), auth.getTimestamp())
-                .getData();
+    @RequestMapping("/{characterId}")
+    public CharacterDataWrapper getCharacterIndividual(@PathVariable Integer characterId) {
+        return characterService.characterById(characterId);
     }
 
-    @RequestMapping("/v1/public/characters/{characterId}/comics")
-    public ComicDataContainer getCharacterComics(@PathVariable Integer characterId) throws ApiException, UnsupportedEncodingException, NoSuchAlgorithmException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-        return apiClient.getComicsCharacterCollection(characterId, auth.getPublicKey(), auth.getHash(), auth.getTimestamp(),
-                null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null,
-                null, null, null, null).getData();
+    @RequestMapping("/{characterId}/comics")
+    public ComicDataWrapper getCharacterComics(@PathVariable Integer characterId,
+                                               @RequestParam(required = false) String format,
+                                               @RequestParam(required = false) String formatType,
+                                               @RequestParam(required = false) Boolean noVariants,
+                                               @RequestParam(required = false) String dateDescriptor,
+                                               @RequestParam(required = false) List<Integer> dateRange,
+                                               @RequestParam(required = false) String title,
+                                               @RequestParam(required = false) String titleStartsWith,
+                                               @RequestParam(required = false) Integer startYear,
+                                               @RequestParam(required = false) Integer issueNumber,
+                                               @RequestParam(required = false) String diamondCode,
+                                               @RequestParam(required = false) Integer digitalId,
+                                               @RequestParam(required = false) String upc,
+                                               @RequestParam(required = false) String isbn,
+                                               @RequestParam(required = false) String ean,
+                                               @RequestParam(required = false) String issn,
+                                               @RequestParam(required = false) Boolean hasDigitalIssue,
+                                               @RequestParam(required = false) String modifiedSince,
+                                               @RequestParam(required = false) List<Integer> creators,
+                                               @RequestParam(required = false) List<Integer> series,
+                                               @RequestParam(required = false) List<Integer> events,
+                                               @RequestParam(required = false) List<Integer> stories,
+                                               @RequestParam(required = false) List<Integer> sharedAppearances,
+                                               @RequestParam(required = false) List<Integer> collaborators,
+                                               @RequestParam(required = false) List<String> orderBy,
+                                               @RequestParam(required = false) Integer limit,
+                                               @RequestParam(required = false) Integer offset) {
+        return characterService.comicsByCharacterId(characterId, format, formatType, noVariants, dateDescriptor, dateRange, title, titleStartsWith,
+                startYear, issueNumber, diamondCode, digitalId, upc, isbn, ean, issn,
+                hasDigitalIssue, modifiedSince, creators, series, events, stories, sharedAppearances,
+                collaborators, orderBy, limit, offset);
     }
 
-    @RequestMapping("/v1/public/characters/{characterId}/events")
-    public EventDataContainer getCharacterEvents(@PathVariable Integer characterId) throws UnsupportedEncodingException, NoSuchAlgorithmException, ApiException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-
-        return apiClient
-                .getCharacterEventsCollection(characterId, auth.getPublicKey(), auth.getHash(), auth.getTimestamp(),
-                        null, null, null, null, null, null,
-                        null, null, null, null)
-                .getData();
+    @RequestMapping("/{characterId}/events")
+    public EventDataWrapper getCharacterEvents(@PathVariable Integer characterId, @RequestParam(required = false) String name,
+                                               @RequestParam(required = false) String nameStartsWith,
+                                               @RequestParam(required = false) String modifiedSince,
+                                               @RequestParam(required = false) List<Integer> creators,
+                                               @RequestParam(required = false) List<Integer> series,
+                                               @RequestParam(required = false) List<Integer> comics,
+                                               @RequestParam(required = false) List<Integer> stories,
+                                               @RequestParam(required = false) List<String> orderBy,
+                                               @RequestParam(required = false) Integer limit,
+                                               @RequestParam(required = false) Integer offset) {
+        return characterService.eventsByCharacterId(characterId, name, nameStartsWith, modifiedSince, creators, series,
+                comics, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/v1/public/characters/{characterId}/series")
-    public SeriesDataContainer getCharacterSeries(@PathVariable Integer characterId) throws UnsupportedEncodingException, NoSuchAlgorithmException, ApiException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-
-        return apiClient
-                .getCharacterSeriesCollection(characterId, auth.getPublicKey(), auth.getHash(), auth.getTimestamp(),
-                        null, null, null, null, null, null,
-                        null, null, null, null, null, null, null)
-                .getData();
+    @RequestMapping("/{characterId}/series")
+    public SeriesDataWrapper getCharacterSeries(@PathVariable Integer characterId,
+                                                @RequestParam(required = false) String title,
+                                                @RequestParam(required = false) String titleStartsWith,
+                                                @RequestParam(required = false) Integer startYear,
+                                                @RequestParam(required = false) String modifiedSince,
+                                                @RequestParam(required = false) List<Integer> comics,
+                                                @RequestParam(required = false) List<Integer> stories,
+                                                @RequestParam(required = false) List<Integer> events,
+                                                @RequestParam(required = false) List<Integer> creators,
+                                                @RequestParam(required = false) String seriesType,
+                                                @RequestParam(required = false) List<String> contains,
+                                                @RequestParam(required = false) List<String> orderBy,
+                                                @RequestParam(required = false) Integer limit,
+                                                @RequestParam(required = false) Integer offset) {
+        return characterService.seriesByCharacterId(characterId, title, titleStartsWith, startYear, modifiedSince,
+                comics, stories, events, creators, seriesType, contains, orderBy, limit, offset);
     }
 
-    @RequestMapping("/v1/public/characters/{characterId}/stories")
-    public StoryDataContainer getCharacterStories(@PathVariable Integer characterId) throws UnsupportedEncodingException, NoSuchAlgorithmException, ApiException {
-        MarvelAuth auth = new MarvelAuth(PUBLIC_KEY, PRIVATE_KEY);
-
-        return apiClient
-                .getCharacterStoryCollection(characterId, auth.getPublicKey(), auth.getHash(), auth.getTimestamp(),
-                        null, null, null, null, null, null, null, null)
-                .getData();
-    }
-
-    private static class MarvelAuth {
-        private String hash;
-        private Integer timestamp;
-        private String publicKey;
-
-        public MarvelAuth(String publicKey, String privateKey) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
-            long timestamp = System.currentTimeMillis()/1000; // ugly hack to fit into an int
-            // ugly hack to get an Integer
-            String ts = String.valueOf(timestamp);
-            String hashBase = ts + privateKey + publicKey;
-
-            this.publicKey = publicKey;
-            this.timestamp = Integer.parseInt(ts);
-            this.hash = Hex.encodeHexString(md5.digest(hashBase.getBytes("UTF-8")));
-        }
-
-        public String getHash() {
-            return hash;
-        }
-
-        public Integer getTimestamp() {
-            return timestamp;
-        }
-
-        public String getPublicKey() {
-            return publicKey;
-        }
+    @RequestMapping("/{characterId}/stories")
+    public StoryDataWrapper getCharacterStories(@PathVariable Integer characterId,
+                                                @RequestParam(required = false) String modifiedSince,
+                                                @RequestParam(required = false) List<Integer> comics,
+                                                @RequestParam(required = false) List<Integer> series,
+                                                @RequestParam(required = false) List<Integer> events,
+                                                @RequestParam(required = false) List<Integer> creators,
+                                                @RequestParam(required = false) List<String> orderBy,
+                                                @RequestParam(required = false) Integer limit,
+                                                @RequestParam(required = false) Integer offset) {
+        return characterService.storiesbyCharacterId(characterId, modifiedSince, comics, series, events, creators,
+                orderBy, limit, offset);
     }
 }
