@@ -36,10 +36,12 @@ public class CharactersController {
         }
     }
 
-    private static void validateListAgainstRegex(List<String> orderBy, String regex, String errorMsg) {
-        Pattern pattern = Pattern.compile(regex);
-        for (String order : orderBy) {
-            validateStringAgainstRegex(order, pattern, errorMsg);
+    private static void validateListAgainstRegex(List<String> stringList, String regex, String errorMsg) {
+        if (stringList != null) {
+            Pattern pattern = Pattern.compile(regex);
+            for (String order : stringList) {
+                validateStringAgainstRegex(order, pattern, errorMsg);
+            }
         }
     }
 
