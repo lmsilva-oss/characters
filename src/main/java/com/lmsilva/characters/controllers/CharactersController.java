@@ -10,17 +10,48 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.ws.rs.BadRequestException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @RestController
-@RequestMapping("/v1/public/characters")
 public class CharactersController {
+    public static final String FORMATS = "(comic|magazine|trade paperback|hardcover|digest|graphic novel|digital comic|infinite comic)";
+    public static final String INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER = "Invalid or unrecognized ordering parameter";
+    public static final String INVALID_OR_UNRECOGNIZED_PARAMETER = "Invalid or unrecognized parameter";
     @Autowired
     @Qualifier("Nitrite")
     ICharacterService characterService;
 
-    @RequestMapping("/")
+    private static void validateLimit(Integer limit) {
+        if (limit != null) {
+            if (limit > 100) {
+                throw new BadRequestException("Limit greater than 100");
+            } else if (limit < 1) {
+                throw new BadRequestException("Limit below 1");
+            }
+        }
+    }
+
+    private static void validateListAgainstRegex(List<String> stringList, String regex, String errorMsg) {
+        if (stringList != null) {
+            Pattern pattern = Pattern.compile(regex);
+            for (String order : stringList) {
+                validateStringAgainstRegex(order, pattern, errorMsg);
+            }
+        }
+    }
+
+    private static void validateStringAgainstRegex(String string, Pattern pattern, String errorMsg) {
+        Matcher matcher = pattern.matcher(string);
+        if (!matcher.matches()) {
+            throw new BadRequestException(errorMsg);
+        }
+    }
+
+    @RequestMapping("/v1/public/characters")
     public List<Character> get(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String nameStartsWith,
@@ -32,16 +63,19 @@ public class CharactersController {
             @RequestParam(required = false) List<String> orderBy,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer offset) {
+        validateLimit(limit);
+        validateListAgainstRegex(orderBy, "-?(name|modified)", INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER);
+
         return characterService.allCharacters(name, nameStartsWith, modifiedSince, comics,
                 series, events, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}")
+    @RequestMapping("/v1/public/characters/{characterId}")
     public Character getCharacterIndividual(@PathVariable Integer characterId) {
         return characterService.characterById(characterId);
     }
 
-    @RequestMapping("/{characterId}/comics")
+    @RequestMapping("/v1/public/characters/{characterId}/comics")
     public List<Comic> getCharacterComics(@PathVariable Integer characterId,
                                           @RequestParam(required = false) String format,
                                           @RequestParam(required = false) String formatType,
@@ -69,13 +103,19 @@ public class CharactersController {
                                           @RequestParam(required = false) List<String> orderBy,
                                           @RequestParam(required = false) Integer limit,
                                           @RequestParam(required = false) Integer offset) {
+        validateLimit(limit);
+        validateListAgainstRegex(orderBy, "-?(focDate|onsaleDate|title|issueNumber|modified)", INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER);
+        validateStringAgainstRegex(format, Pattern.compile(FORMATS), INVALID_OR_UNRECOGNIZED_PARAMETER);
+        validateStringAgainstRegex(formatType, Pattern.compile("(comic|collection)"), INVALID_OR_UNRECOGNIZED_PARAMETER);
+        validateStringAgainstRegex(dateDescriptor, Pattern.compile("((last|this|next)Week|thisMonth)"), INVALID_OR_UNRECOGNIZED_PARAMETER);
+
         return characterService.comicsByCharacterId(characterId, format, formatType, noVariants, dateDescriptor, dateRange, title, titleStartsWith,
                 startYear, issueNumber, diamondCode, digitalId, upc, isbn, ean, issn,
                 hasDigitalIssue, modifiedSince, creators, series, events, stories, sharedAppearances,
                 collaborators, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/events")
+    @RequestMapping("/v1/public/characters/{characterId}/events")
     public List<Event> getCharacterEvents(@PathVariable Integer characterId, @RequestParam(required = false) String name,
                                           @RequestParam(required = false) String nameStartsWith,
                                           @RequestParam(required = false) String modifiedSince,
@@ -86,11 +126,14 @@ public class CharactersController {
                                           @RequestParam(required = false) List<String> orderBy,
                                           @RequestParam(required = false) Integer limit,
                                           @RequestParam(required = false) Integer offset) {
+        validateLimit(limit);
+        validateListAgainstRegex(orderBy, "-?(name|startDate|modified)", INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER);
+
         return characterService.eventsByCharacterId(characterId, name, nameStartsWith, modifiedSince, creators, series,
                 comics, stories, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/series")
+    @RequestMapping("/v1/public/characters/{characterId}/series")
     public List<Series> getCharacterSeries(@PathVariable Integer characterId,
                                            @RequestParam(required = false) String title,
                                            @RequestParam(required = false) String titleStartsWith,
@@ -105,11 +148,15 @@ public class CharactersController {
                                            @RequestParam(required = false) List<String> orderBy,
                                            @RequestParam(required = false) Integer limit,
                                            @RequestParam(required = false) Integer offset) {
+        validateLimit(limit);
+        validateListAgainstRegex(orderBy, "-?(title|startYear|modified)", INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER);
+        validateListAgainstRegex(contains, FORMATS, INVALID_OR_UNRECOGNIZED_PARAMETER);
+
         return characterService.seriesByCharacterId(characterId, title, titleStartsWith, startYear, modifiedSince,
                 comics, stories, events, creators, seriesType, contains, orderBy, limit, offset);
     }
 
-    @RequestMapping("/{characterId}/stories")
+    @RequestMapping("/v1/public/characters/{characterId}/stories")
     public List<Story> getCharacterStories(@PathVariable Integer characterId,
                                            @RequestParam(required = false) String modifiedSince,
                                            @RequestParam(required = false) List<Integer> comics,
@@ -119,6 +166,9 @@ public class CharactersController {
                                            @RequestParam(required = false) List<String> orderBy,
                                            @RequestParam(required = false) Integer limit,
                                            @RequestParam(required = false) Integer offset) {
+        validateLimit(limit);
+        validateListAgainstRegex(orderBy, "-?(id|modified)", INVALID_OR_UNRECOGNIZED_ORDERING_PARAMETER);
+
         return characterService.storiesbyCharacterId(characterId, modifiedSince, comics, series, events, creators,
                 orderBy, limit, offset);
     }
