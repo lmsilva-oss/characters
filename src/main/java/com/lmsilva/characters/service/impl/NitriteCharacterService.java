@@ -161,7 +161,7 @@ public class NitriteCharacterService implements ICharacterService {
         } else {
             results = db.getRepository(Comic.class).find(filter).toList();
         }
-        return results; // TODO: add filtering and pagination
+        return results; // TODO: still missing most parameter checks
     }
 
     @Override
@@ -189,7 +189,7 @@ public class NitriteCharacterService implements ICharacterService {
         } else  {
             results = db.getRepository(Event.class).find(filter).toList();
         }
-        return results; // TODO: add filtering and pagination
+        return results; // TODO: still missing most parameter checks
     }
 
     @Override
@@ -219,7 +219,7 @@ public class NitriteCharacterService implements ICharacterService {
         else {
             results = db.getRepository(Series.class).find(filter).toList();
         }
-        return results; // TODO: add filtering and pagination
+        return results; // TODO: still missing most parameter checks
     }
 
     @Override
@@ -246,6 +246,6 @@ public class NitriteCharacterService implements ICharacterService {
         } else {
             results = db.getRepository(Story.class).find(filter).toList();
         }
-        return results; // TODO: add filtering and pagination
+        return results; // TODO: still missing most parameter checks
     }
 }
