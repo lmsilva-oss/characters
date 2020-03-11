@@ -3,7 +3,10 @@ package com.lmsilva.characters.service.impl;
 import com.lmsilva.characters.service.ICharacterService;
 import com.lmsilva.characters.swagger.model.*;
 import com.lmsilva.characters.swagger.model.Character;
+import org.dizitart.no2.FindOptions;
 import org.dizitart.no2.Nitrite;
+import org.dizitart.no2.SortOrder;
+import org.dizitart.no2.objects.ObjectFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,12 +24,38 @@ public class NitriteCharacterService implements ICharacterService {
     @Autowired
     Nitrite db;
 
+    private static FindOptions createFindOptions(List<String> orderBy, Integer limit, Integer offset) {
+        FindOptions options = null;
+        if (orderBy != null) {
+            String orderByField = orderBy.get(0);
+            if (orderByField.startsWith("-")) {
+                options = FindOptions.sort(orderByField, SortOrder.Descending);
+            } else {
+                options = FindOptions.sort(orderByField, SortOrder.Ascending);
+            }
+        }
+
+        if (limit != null) {
+            if (offset == null) {
+                offset = 0;
+            }
+            if (options != null) {
+                options = options.thenLimit(offset, limit);
+            } else {
+                options = FindOptions.limit(offset, limit);
+            }
+        }
+        return options;
+    }
+
     @Override
     public List<Character> allCharacters(String name, String nameStartsWith, String modifiedSince,
                                          List<Integer> comics, List<Integer> series, List<Integer> events,
                                          List<Integer> stories, List<String> orderBy,
                                          Integer limit, Integer offset) {
-        return db.getRepository(Character.class).find().toList(); // TODO: add filtering and pagination
+        FindOptions options = createFindOptions(orderBy, limit, offset);
+        List<Character> characters = db.getRepository(Character.class).find(options).toList();
+        return characters; // TODO: add filtering and pagination
     }
 
     @Override
@@ -56,7 +85,9 @@ public class NitriteCharacterService implements ICharacterService {
             }
             ids.add(Integer.valueOf(matcher.group(1)));
         }
-        List<Comic> results = db.getRepository(Comic.class).find(in("id", ids.toArray())).toList();
+        ObjectFilter filter = in("id", ids.toArray());
+        FindOptions options = createFindOptions(orderBy, limit, offset);
+        List<Comic> results = db.getRepository(Comic.class).find(filter, options).toList();
         return results; // TODO: add filtering and pagination
     }
 
@@ -77,7 +108,9 @@ public class NitriteCharacterService implements ICharacterService {
             }
             ids.add(Integer.valueOf(matcher.group(1)));
         }
-        List<Event> results = db.getRepository(Event.class).find(in("id", ids.toArray())).toList();
+        ObjectFilter filter = in("id", ids.toArray());
+        FindOptions options = createFindOptions(orderBy, limit, offset);
+        List<Event> results = db.getRepository(Event.class).find(filter, options).toList();
         return results; // TODO: add filtering and pagination
     }
 
@@ -99,7 +132,9 @@ public class NitriteCharacterService implements ICharacterService {
             }
             ids.add(Integer.valueOf(matcher.group(1)));
         }
-        List<Series> results = db.getRepository(Series.class).find(in("id", ids.toArray())).toList();
+        ObjectFilter filter = in("id", ids.toArray());
+        FindOptions options = createFindOptions(orderBy, limit, offset);
+        List<Series> results = db.getRepository(Series.class).find(filter, options).toList();
         return results; // TODO: add filtering and pagination
     }
 
@@ -119,7 +154,9 @@ public class NitriteCharacterService implements ICharacterService {
             }
             ids.add(Integer.valueOf(matcher.group(1)));
         }
-        List<Story> results = db.getRepository(Story.class).find(in("id", ids.toArray())).toList();
+        ObjectFilter filter = in("id", ids.toArray());
+        FindOptions options = createFindOptions(orderBy, limit, offset);
+        List<Story> results = db.getRepository(Story.class).find(filter, options).toList();
         return results; // TODO: add filtering and pagination
     }
 }
