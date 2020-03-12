@@ -22,3 +22,8 @@ to generate the repository description for the characters, and the comics, event
 participate or are otherwised related with (in the previous example, these files will be created as /home/user/export.json.characters, 
 /home/user/export.json.series, and so on)
 * use the -Dcom.lmsilva.characters.importPath environment variable to point to a location of a previous export (in the example above, /home/user/export.json)
+
+# Running
+* Use mvn clean package to generate the Spring Boot .jar
+* Run it with java -jar <repository path>/target/characters-0.0.1-SNAPSHOT.jar
+* Add the flags above if you need to import/export
